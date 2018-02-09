@@ -1,0 +1,9 @@
+---
+health:
+  - name: ping
+
+  - name: database
+    url: "OPS$HPPST/Gu#r#n0$hp2010@//5.16.8.84:1521/SPO"
+
+  - name: database
+    url: "OPS$HPPST/Gu#r#n0$hp2010@//5.16.8.195:1521/ABC"
