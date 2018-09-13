@@ -27,11 +27,19 @@ type Response struct {
 
 func Check(c echo.Context) error {
 	health := c.Get("health").(core.Health)
-	dbServices := health.GetByType("database")
+	dbCandidates := health.GetByType("database")
 
 	responses := make(chan Response)
 
-	for _, s := range dbServices {
+	sid := c.Param("sid")
+	dbs := make([]core.Service, 0, len(dbCandidates))
+	if sid != "" {
+		dbs = getDatabaseByName(sid, dbCandidates)
+	} else {
+		dbs = dbCandidates
+	}
+
+	for _, s := range dbs {
 		go func(s core.Service) {
 			db, err := sql.Open("goracle", s.URL)
 			if err != nil {
@@ -54,7 +62,7 @@ func Check(c echo.Context) error {
 		select {
 		case r := <-responses:
 			rs = append(rs, r)
-			if len(rs) == len(dbServices) {
+			if len(rs) == len(dbs) {
 				return c.JSON(http.StatusCreated, rs)
 			}
 		case <-time.After(60 * time.Second):
@@ -62,4 +70,14 @@ func Check(c echo.Context) error {
 			return c.JSON(http.StatusCreated, rs)
 		}
 	}
+}
+
+func getDatabaseByName(name string, dbs []core.Service) []core.Service {
+	filtered := make([]core.Service, 0, len(dbs))
+	for _, db := range dbs {
+		if db.Name == name {
+			filtered = append(filtered, db)
+		}
+	}
+	return filtered
 }

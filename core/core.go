@@ -19,14 +19,15 @@ type Health struct {
 }
 
 type Service struct {
+	Type string `yaml:"type"`
 	Name string `yaml:"name"`
 	URL  string `yaml:"url"`
 }
 
-func (h Health) GetByType(name string) []Service {
+func (h Health) GetByType(tp string) []Service {
 	var r []Service
 	for _, s := range h.Services {
-		if s.Name == name {
+		if s.Type == tp {
 			r = append(r, s)
 		}
 	}
