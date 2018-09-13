@@ -1,3 +1,4 @@
 vendor
 health-checker
 .DS_Store
+dist
