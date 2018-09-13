@@ -1,9 +1,9 @@
-package database
+package db
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/labstack/echo"
@@ -11,9 +11,9 @@ import (
 	_ "gopkg.in/goracle.v2"
 )
 
-const (
-	stmt = `SELECT INSTANCE_NAME, HOST_NAME, VERSION, STARTUP_TIME, STATUS FROM V$INSTANCE`
-)
+const stmt = `SELECT INSTANCE_NAME, HOST_NAME, VERSION, STARTUP_TIME, STATUS FROM V$INSTANCE`
+
+var errTimeout = errors.New("max execution time exceeded")
 
 type Response struct {
 	InstanceName string
@@ -21,6 +21,7 @@ type Response struct {
 	Version      string
 	StartupTime  time.Time
 	Status       string
+	DateTime     time.Time
 	Error        error
 }
 
@@ -30,13 +31,8 @@ func Check(c echo.Context) error {
 
 	responses := make(chan Response)
 
-	var wg sync.WaitGroup
-	wg.Add(len(dbServices))
-
 	for _, s := range dbServices {
 		go func(s core.Service) {
-			defer wg.Done()
-
 			db, err := sql.Open("goracle", s.URL)
 			if err != nil {
 				responses <- Response{Error: err}
@@ -47,20 +43,23 @@ func Check(c echo.Context) error {
 				if err != nil {
 					responses <- Response{Error: err}
 				} else {
-					responses <- Response{i, h, v, t, ss, nil}
+					responses <- Response{i, h, v, t, ss, time.Now(), nil}
 				}
 			}
 		}(s)
 	}
 
 	var rs []Response
-	go func() {
-		for r := range responses {
+	for {
+		select {
+		case r := <-responses:
 			rs = append(rs, r)
+			if len(rs) == len(dbServices) {
+				return c.JSON(http.StatusCreated, rs)
+			}
+		case <-time.After(60 * time.Second):
+			rs = append(rs, Response{Error: errTimeout})
+			return c.JSON(http.StatusCreated, rs)
 		}
-	}()
-
-	wg.Wait()
-
-	return c.JSON(http.StatusCreated, rs)
+	}
 }

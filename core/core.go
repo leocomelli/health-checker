@@ -2,12 +2,13 @@ package core
 
 import (
 	"io/ioutil"
+	"os"
 
 	"github.com/labstack/echo"
 	yaml "gopkg.in/yaml.v2"
 )
 
-const ConfigFilename string = "health.yml"
+var ConfigFilename string = "health.yml"
 
 type Checker interface {
 	Check(c echo.Context) error
@@ -33,6 +34,11 @@ func (h Health) GetByType(name string) []Service {
 }
 
 func LoadServices() (*Health, error) {
+	customFilepath := os.Getenv("HC_FILE")
+	if customFilepath != "" {
+		ConfigFilename = customFilepath
+	}
+
 	data, err := ioutil.ReadFile(ConfigFilename)
 	if err != nil {
 		return nil, err

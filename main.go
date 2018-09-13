@@ -1,13 +1,12 @@
 package main
 
 import (
-	"github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
-	"github.com/labstack/echo/engine/standard"
 	"github.com/labstack/echo/middleware"
 	"github.com/leocomelli/health-checker/core"
-	"github.com/leocomelli/health-checker/database"
+	db "github.com/leocomelli/health-checker/database"
 	"github.com/leocomelli/health-checker/ping"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -30,11 +29,11 @@ func main() {
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
-		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+		AllowMethods: []string{echo.GET},
 	}))
 
 	e.GET("/ping", ping.Check)
-	e.GET("/database", database.Check)
+	e.GET("/database", db.Check)
 
-	e.Run(standard.New(":8080"))
+	e.Logger.Fatal(e.Start(":8080"))
 }
