@@ -6,17 +6,15 @@ import (
 	"github.com/leocomelli/health-checker/core"
 	db "github.com/leocomelli/health-checker/database"
 	"github.com/leocomelli/health-checker/ping"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
+	e := echo.New()
 
 	services, err := core.LoadServices()
 	if err != nil {
-		logrus.Fatal(err)
+		e.Logger.Fatal(err)
 	}
-
-	e := echo.New()
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
