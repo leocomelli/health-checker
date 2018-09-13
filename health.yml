@@ -1,8 +1,10 @@
 ---
 health:
-  - name: ping
+  - type: ping
 
-  - name: database
+  - type: database
+    name: prod
     url: "scott/tiger@//127.0.0.1:1521/DB1"
-  - name: database
+  - type: database
+    name: dev
     url: "scott/tiger@//127.0.0.1:1521/DB2"
