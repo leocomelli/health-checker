@@ -31,6 +31,7 @@ func main() {
 	}))
 
 	e.GET("/ping", ping.Check)
+	e.GET("/_ping", ping.Check)
 	e.GET("/database", db.Check)
 	e.GET("/database/:sid", db.Check)
 
